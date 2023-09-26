@@ -65,9 +65,66 @@ jobs:
           path: ${{ steps.tests.outputs.artifactsPath }}
 
 
-  # buildAndroid:
-  #   name: Build for Android
-  #   needs: testRunner
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 
+  buildForAndroidPlatform:
+    needs: testRunner
+    name: Build for Android
+    runs-on: ubuntu-latest
+    strategy:
+        fail-fast: false
+    steps:
+        -   name: Checkout code
+            uses: actions/checkout@v3
+
+        -   name: Create LFS file list
+            run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+        -   name: Restore LFS cache
+            uses: actions/cache@v3
+            id: lfs-cache
+            with:
+                path: .git/lfs
+                key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+
+        -   name: Git LFS Pull
+            run: |
+                git lfs pull
+                git add .
+                git reset --hard
+
+        -   name: Restore Library cache
+            uses: actions/cache@v3
+            with:
+                path: Library
+                key: Library-build-Android
+                restore-keys: |
+                    Library-build-
+                    Library-
+
+        -   name: Free Disk Space for Android
+        #     uses: jlumbroso/free-disk-space@v1.2.0
+            run: |
+                sudo swapoff -a
+                sudo rm -f /swapfile
+                sudo apt clean
+                docker rmi $(docker image ls -aq)
+                df -h
+
+        -   name: Build it for Android
+            uses: game-ci/unity-builder@v3
+            id: androidBuilder
+            with:
+                targetPlatform: Android
+                androidExportType: 'androidAppBundle'
+                androidKeystoreName: user.keystore
+                androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+                androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+                androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+                androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+        -   name: list root folder files
+            run: ls
+
+        -   name: Upload the Android build artifacts
+            uses: actions/upload-artifact@v3
+            with:
+                name: build-Android
+                path: build/Android
