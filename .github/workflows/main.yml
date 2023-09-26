@@ -1,6 +1,10 @@
 name: Test and build the sample game
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
 
 env:
   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
@@ -54,11 +58,8 @@ jobs:
         uses: game-ci/unity-test-runner@v3
         id: tests
         with:
-          artifactsPath: tests-artifacts
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Test Results
+          testMode: all
       - uses: actions/upload-artifact@v3
-        if: always()
         with:
           name: Test results
           path: ${{ steps.tests.outputs.artifactsPath }}
