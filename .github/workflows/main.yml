@@ -57,17 +57,11 @@ jobs:
           artifactsPath: tests-artifacts
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: Test Results
-          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+my.assembly.*'
       - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: Test results
           path: ${{ steps.tests.outputs.artifactsPath }}
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: Coverage results
-          path: ${{ steps.tests.outputs.coveragePath }}
 
 
   # buildAndroid:
