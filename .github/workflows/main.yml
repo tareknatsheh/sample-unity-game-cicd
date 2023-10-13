@@ -101,7 +101,7 @@ jobs:
                     Library-
 
         -   name: Free Disk Space for Android
-            uses: jlumbroso/free-disk-space@v1.2.0
+            uses: jlumbroso/free-disk-space@v1.3.0
             # run: |
             #     sudo swapoff -a
             #     sudo rm -f /swapfile
