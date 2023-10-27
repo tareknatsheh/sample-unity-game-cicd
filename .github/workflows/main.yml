@@ -66,9 +66,108 @@ jobs:
   #         path: ${{ steps.tests.outputs.artifactsPath }}
 
 
-    buildForAndroidPlatform:
+    # buildForAndroidPlatform:
+    #     needs: checkLicense
+    #     name: Build for Android
+    #     runs-on: ubuntu-latest
+    #     strategy:
+    #         fail-fast: false
+    #     steps:
+    #         -   name: Checkout code
+    #             uses: actions/checkout@v3
+
+    #         -   name: Create LFS file list
+    #             run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+    #         -   name: Restore LFS cache
+    #             uses: actions/cache@v3
+    #             id: lfs-cache
+    #             with:
+    #                 path: .git/lfs
+    #                 key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+
+    #         -   name: Git LFS Pull
+    #             run: |
+    #                 git lfs pull
+    #                 git add .
+    #                 git reset --hard
+
+    #         -   name: Restore Library cache
+    #             uses: actions/cache@v3
+    #             with:
+    #                 path: Library
+    #                 key: Library-build-Android
+    #                 restore-keys: |
+    #                     Library-build-
+    #                     Library-
+
+    #         -   name: Free Disk Space for Android
+    #             uses: jlumbroso/free-disk-space@v1.3.0
+    #             # run: |
+    #             #     sudo swapoff -a
+    #             #     sudo rm -f /swapfile
+    #             #     sudo apt clean
+    #             #     docker rmi $(docker image ls -aq)
+    #             #     df -h
+
+    #         -   name: Build it for Android
+    #             uses: game-ci/unity-builder@v3
+    #             id: androidBuilder
+    #             with:
+    #                 targetPlatform: Android
+    #                 androidExportType: 'androidAppBundle'
+    #                 androidKeystoreName: user.keystore
+    #                 androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    #                 androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+    #                 androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+    #                 androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+    #         -   name: list root folder files
+    #             run: ls
+
+    #         -   name: Upload the Android build artifacts
+    #             uses: actions/upload-artifact@v3
+    #             with:
+    #                 name: build-Android
+    #                 path: build/Android
+
+
+    # releaseToGooglePlay:
+    #     name: Release to the Google Play Store
+    #     runs-on: ubuntu-latest
+    #     needs: buildForAndroidPlatform
+    #     env:
+    #         GOOGLE_PLAY_KEY_FILE: ${{ secrets.GOOGLE_PLAY_KEY_FILE }}
+    #         GOOGLE_PLAY_KEY_FILE_PATH: ${{ format('{0}/fastlane/google-fastlane.json', github.workspace) }}
+    #         ANDROID_BUILD_FILE_PATH: ${{ format('{0}/build/Android/Android.aab', github.workspace) }}
+    #         ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
+    #     steps:
+    #         -   name: Checkout Repository
+    #             uses: actions/checkout@v3
+    #         -   name: Download Android Artifact
+    #             uses: actions/download-artifact@v2
+    #             with:
+    #                 name: build-Android
+    #                 path: build/Android
+    #         -   name: Add Authentication
+    #             run: echo "$GOOGLE_PLAY_KEY_FILE" > $GOOGLE_PLAY_KEY_FILE_PATH
+    #         -   name: Set up Fastlane
+    #             uses: ruby/setup-ruby@v1
+    #             with:
+    #                 ruby-version: 2.7.2
+    #                 bundler-cache: true
+    #         -   name: Upload to Google Play Internal
+    #             uses: maierj/fastlane-action@v2.0.1
+    #             with:
+    #                 lane: 'android internal' # Change to upload to a different lane
+    #         -   name: Cleanup to avoid storage limit
+    #             if: always()
+    #             uses: geekyeggo/delete-artifact@v1
+    #             with:
+    #                 name: build-Android
+
+    buildForiOSPlatform:
         needs: checkLicense
-        name: Build for Android
+        name: Build for IOS
         runs-on: ubuntu-latest
         strategy:
             fail-fast: false
@@ -96,71 +195,22 @@ jobs:
                 uses: actions/cache@v3
                 with:
                     path: Library
-                    key: Library-build-Android
+                    key: Library-build-Ios
                     restore-keys: |
                         Library-build-
                         Library-
 
-            -   name: Free Disk Space for Android
+            -   name: Free Disk Space for IOS
                 uses: jlumbroso/free-disk-space@v1.3.0
-                # run: |
-                #     sudo swapoff -a
-                #     sudo rm -f /swapfile
-                #     sudo apt clean
-                #     docker rmi $(docker image ls -aq)
-                #     df -h
 
-            -   name: Build it for Android
+            -   name: Build it for IOS
                 uses: game-ci/unity-builder@v3
-                id: androidBuilder
+                id: iosBuilder
                 with:
-                    targetPlatform: Android
-                    androidExportType: 'androidAppBundle'
-                    androidKeystoreName: user.keystore
-                    androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-                    androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
-                    androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
-                    androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
-            -   name: list root folder files
-                run: ls
+                    targetPlatform: iOS
 
-            -   name: Upload the Android build artifacts
+            -   name: Upload the IOS build artifacts
                 uses: actions/upload-artifact@v3
                 with:
-                    name: build-Android
-                    path: build/Android
-
-
-    releaseToGooglePlay:
-        name: Release to the Google Play Store
-        runs-on: ubuntu-latest
-        needs: buildForAndroidPlatform
-        env:
-            GOOGLE_PLAY_KEY_FILE: ${{ secrets.GOOGLE_PLAY_KEY_FILE }}
-            GOOGLE_PLAY_KEY_FILE_PATH: ${{ format('{0}/fastlane/google-fastlane.json', github.workspace) }}
-            ANDROID_BUILD_FILE_PATH: ${{ format('{0}/build/Android/Android.aab', github.workspace) }}
-            ANDROID_PACKAGE_NAME: ${{ secrets.ANDROID_PACKAGE_NAME }}
-        steps:
-            -   name: Checkout Repository
-                uses: actions/checkout@v3
-            -   name: Download Android Artifact
-                uses: actions/download-artifact@v2
-                with:
-                    name: build-Android
-                    path: build/Android
-            -   name: Add Authentication
-                run: echo "$GOOGLE_PLAY_KEY_FILE" > $GOOGLE_PLAY_KEY_FILE_PATH
-            -   name: Set up Fastlane
-                uses: ruby/setup-ruby@v1
-                with:
-                    ruby-version: 2.7.2
-                    bundler-cache: true
-            -   name: Upload to Google Play Internal
-                uses: maierj/fastlane-action@v2.0.1
-                with:
-                    lane: 'android internal' # Change to upload to a different lane
-            -   name: Cleanup to avoid storage limit
-                if: always()
-                uses: geekyeggo/delete-artifact@v1
-                with:
-                    name: build-Android
+                    name: build-iOS
+                    path: build/iOS
