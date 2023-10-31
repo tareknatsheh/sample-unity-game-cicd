@@ -11,6 +11,11 @@ jobs:
         with:
           ruby-version: 2.6
           bundler-cache: true
+      
+      - name: Update ruby version to 3.3.3
+        shell: bash
+        run: |
+          gem update --system 3.3.3
 
       - name: Build iOS
         shell: bash
